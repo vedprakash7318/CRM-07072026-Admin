@@ -1,0 +1,367 @@
+/* Main Container */
+.dateWise-data-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+.dateWise-multiselect-tags .p-multiselect-items {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.dateWise-multiselect-tags .p-multiselect-item {
+  white-space: nowrap;
+  margin-right: 8px;
+  min-width: max-content;
+}
+
+/* Filters Container */
+.dateWise-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: flex-end;
+}
+
+.dateWise-filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  flex: 1;
+}
+
+.dateWise-filter-group label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.dateWise-filter-select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.dateWise-multiselect-tags .p-multiselect {
+  width: 100%;
+  min-height: 42px;
+}
+
+.dateWise-reset-filters-btn {
+  padding: 10px 15px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: auto;
+  height: 42px;
+}
+
+.dateWise-reset-filters-btn:hover {
+  background-color: #5a6268;
+}
+
+/* Search Container */
+.dateWise-search-container {
+  flex: 2;
+  min-width: 300px;
+}
+
+.dateWise-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dateWise-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #6c757d;
+}
+
+.dateWise-search-input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.dateWise-search-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.dateWise-clear-search-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.3s;
+}
+
+.dateWise-clear-search-btn:hover {
+  color: #dc3545;
+}
+
+/* Table Styles */
+.dateWise-table-wrapper {
+  display: block;
+  overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: white;
+  margin-bottom: 20px;
+}
+
+.dateWise-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.dateWise-table th,
+.dateWise-table td {
+  border: 1px solid #e9ecef;
+  padding: 12px;
+  text-align: left;
+}
+
+.dateWise-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  position: sticky;
+  top: 0;
+}
+
+.dateWise-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Action Buttons */
+.dateWise-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.dateWise-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dateWise-btn-icon {
+  font-size: 16px;
+}
+
+.dateWise-view-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.dateWise-view-btn:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.dateWise-delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.dateWise-delete-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Tags */
+.dateWise-tag {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Pagination Styles */
+.dateWise-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  gap: 5px;
+}
+
+.dateWise-mobile-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+  gap: 15px;
+}
+
+.dateWise-pagination-btn {
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dateWise-pagination-btn:hover:not(:disabled) {
+  background-color: #e9ecef;
+}
+
+.dateWise-pagination-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dateWise-pagination-btn.dateWise-active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Card View Styles */
+.dateWise-card-wrapper {
+  display: none;
+}
+
+.dateWise-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+}
+
+.dateWise-card p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.dateWise-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+/* No Data Message */
+.dateWise-no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Loader Styles */
+.dateWise-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.dateWise-loader {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+.dateWise-filter-loader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f1f3f4;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.dateWise-small-loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 768px) {
+  .dateWise-table-wrapper {
+    display: none;
+  }
+
+  .dateWise-card-wrapper {
+    display: block;
+  }
+
+  .dateWise-filters-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dateWise-search-container,
+  .dateWise-filter-group {
+    min-width: 100%;
+  }
+
+  .dateWise-reset-filters-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .dateWise-data-container {
+    padding: 10px;
+  }
+
+  .dateWise-card {
+    padding: 12px;
+  }
+
+  .dateWise-mobile-pagination {
+    font-size: 14px;
+  }
+}

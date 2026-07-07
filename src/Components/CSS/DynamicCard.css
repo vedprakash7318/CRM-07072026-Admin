@@ -1,0 +1,134 @@
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 15px 0;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.pagination-container button {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: transparent;
+    color: #333;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.pagination-container button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+.pagination-container .page-numbers {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination-container .page-number-btn {
+    padding: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    background-color: transparent !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.pagination-container .page-number-btn:hover:not(:disabled) {
+    background-color: #f0f0f0 !important;
+}
+
+.pagination-container .page-number-btn.active-page {
+    background-color: #e0e7ff !important;
+    color: #3454d1 !important;
+    border: 1px solid #c2c9eb !important;
+    box-shadow: none !important;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #666;
+}
+
+.card-header-sticky {
+    position: sticky;
+    top: 0;  /* Keeps the header fixed at the top */
+    background-color: white;  /* Make sure the background is solid */
+    z-index: 1000;  /* Ensures it stays above other elements when scrolling */
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  /* Adds shadow for better visibility */
+}
+
+
+.lead-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: white;
+}
+
+.lead-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.lead-card-body {
+    margin-bottom: 15px;
+}
+
+.lead-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-button {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.delete {
+    background-color: red;
+    color: white;
+}
+
+.view {
+    background-color: #3454D1;
+    color: white;
+}

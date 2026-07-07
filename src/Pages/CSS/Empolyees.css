@@ -1,0 +1,23 @@
+.add-employee{
+    padding: 13px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    background-color: #3454D1;
+}
+
+
+.card-view-employee{
+    display: none;
+}
+
+
+@media (max-width:768px){
+    .card-view-employee{
+        display: block;
+    }
+    .large-view{
+        display: none;
+
+    }
+}

@@ -1,0 +1,145 @@
+.main-dashboard-outer {
+  width: 100%;
+  margin: 20px auto;
+}
+
+.dashboard-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.dashboard-card {
+  background-color: #ffffff;
+  width: 23%;
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  font-size: 36px;
+  color: #3454D1;
+  background-color: #E7ECFF;
+  padding: 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-content h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+  font-weight: 600;
+}
+
+.card-content h1 {
+  margin: 5px 0 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #222;
+}
+
+.main-dashboard-bottom {
+  margin: 20px auto;
+  width: 100%;
+  box-shadow: 0px 0px 12px 0px rgb(203, 201, 201);
+  border-radius: 20px;
+  overflow-x: auto;
+}
+
+.table-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  justify-content: space-around;
+  padding: 5px;
+  margin-bottom: 20px;
+}
+
+.table-title input {
+  height: 40px;
+  font-size: 17px;
+  color: black;
+  border: 2px solid #3454D1;
+  border-radius: 8px;
+  padding-left: 20px;
+  width: 100%;
+  outline: none;
+}
+
+.table-title h2 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.main-card-container {
+  display: none;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+  .dashboard-card {
+    width: 48%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .main-table-container {
+    display: none;
+  }
+
+  .main-card-container {
+    display: block;
+  }
+
+  .dashboard-card {
+    width: 100%;
+  }
+
+  .dashboard-cards-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .table-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .table-title input {
+    width: 100%;
+  }
+
+  .main-dashboard-bottom {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .table-title {
+    gap: 10px;
+  }
+
+  .table-title input {
+    width: 100%;
+  }
+}

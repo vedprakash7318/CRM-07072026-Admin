@@ -1,0 +1,53 @@
+/* Custom styling for the lead form modal */
+.leadFormOuter{
+  width: 50vw;
+}
+.leadform-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5); /* Transparent background for overlay */
+}
+
+.leadform-modal-content {
+  width: 200%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+/* Optional: Form styling for spacing */
+.p-field label {
+  font-weight: bold;
+}
+
+.p-inputtext, .p-dropdown {
+  width: 100%;
+}
+
+.p-grid .p-field {
+  margin-bottom: 1.5rem;
+}
+
+/* Make form fields stack vertically on mobile */
+@media (max-width: 768px) {
+  .p-grid {
+    display: block;
+  }
+
+  .p-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .p-button {
+    min-width: 100%; /* Buttons take full width on mobile */
+    margin-top: 1rem;
+  }
+}
+
+/* Ensure buttons look good on larger screens */
+@media (min-width: 768px) {
+  .p-button {
+    min-width: 120px;
+    margin-left: 1rem;
+  }
+}
