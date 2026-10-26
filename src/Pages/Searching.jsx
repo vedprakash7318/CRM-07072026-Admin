@@ -53,13 +53,14 @@ export default function Searching() {
         <div className="lead-table-container" style={{ marginTop: '20px' }}>
           <DynamicTable
             className="dynamicTable"
-            lead={leads.slice(first, first + rows)}
+            lead={leads}
             tableTitle="Search Results"
             first={first}
             rows={rows}
             totalRecords={leads.length}
             loading={loading}
             onPageChange={onPageChange}
+            lazy={false}
             onUpdate={handleSearch}
             onAssignSuccess={handleSearch}
             showAssignButton={true}

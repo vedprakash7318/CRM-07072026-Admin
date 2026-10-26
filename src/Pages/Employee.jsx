@@ -275,13 +275,6 @@ function Employee() {
                     <i className="ri-eye-line"></i>
                 </button>
                 
-                <button 
-                    onClick={() => navigate(`/employee/date-report/${rowData._id}`)} 
-                    style={{ borderRadius: "50%", border: "none", height: "40px", width: "40px", backgroundColor: "#FFF4E5", color: "#FF9800" }}
-                    title="View Date Report"
-                >
-                    <i className="ri-bar-chart-2-line"></i>
-                </button>
             </div>
         );
     };
@@ -418,7 +411,7 @@ function Employee() {
                             <Column field="empName" header="Name" style={{ width: '20%' }} />
                             <Column field="empPhoneNumber" header="Phone" style={{ width: '20%' }} />
                             <Column field="empEmail" header="Email" style={{ width: '20%' }} />
-                            <Column field="target" header="Target" style={{ width: '10%' }} />
+                            <Column header="Target / Assigned" style={{ width: '15%' }} body={(rowData) => `${rowData.target || 80} / ${rowData.totalAssigned || 0}`} />
                             <Column
                                 header="Date Of Joining"
                                 body={(rowData) => formatDateWithTimezone(rowData.createdAt)}

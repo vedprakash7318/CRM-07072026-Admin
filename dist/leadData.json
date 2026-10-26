@@ -1,0 +1,10 @@
+[
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media","assigned":"ved Prakash" },
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media", "assigned":"NA" },
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media" , "assigned":"Jay Prakash"},
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media" , "assigned":"Satya Prakash"},
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media", "assigned":"Krishna" },
+    { "name": "John Doe", "phone": "1234567890", "priority": "High", "source": "Social Media" , "assigned":"NA"},
+    { "name": "Jane Smith", "phone": "0987654321", "priority": "Low", "source": "Social Media" , "assigned":"NA"}
+  ]
+  

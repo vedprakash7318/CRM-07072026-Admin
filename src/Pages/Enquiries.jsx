@@ -34,16 +34,16 @@ function Enquiries() {
   const [buttonTitle, setButtonTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [first, setFirst] = useState(0);
-  const [rows, setRows] = useState(500);
+  const [rows, setRows] = useState(100);
   const [totalRecords, setTotalRecords] = useState(0);
   const [tableTitle] = useState('Public Enquiries');
   const [adminSlug, setAdminSlug] = useState('');
 
   // Redux state selectors
   const rawEmployeeData = useSelector((state) => state.leads.Employee);
-  const employeeData = React.useMemo(() => 
+  const employeeData = React.useMemo(() =>
     rawEmployeeData?.filter(item => item?.blocked === false) || [],
-  [rawEmployeeData]);
+    [rawEmployeeData]);
   const tagData = useSelector((state) => state.leads.tag);
 
   // Derived data
@@ -60,12 +60,13 @@ function Enquiries() {
     }))
     : [];
 
-  // Handle tags filter change
   const handleTagsChange = (tags) => {
     setSelectedMyTags(tags);
     setTagsFilter(tags);
     setFirst(0);
-    fetchEnquiries(1, rows, employeeFilter, tags, searchQuery);
+    const isFilterActive = employeeFilter || searchQuery || (tags && tags.length > 0);
+    const limit = isFilterActive ? 10000 : 100;
+    fetchEnquiries(1, limit, employeeFilter, tags, searchQuery);
   };
 
   // Initial data fetch
@@ -124,6 +125,7 @@ function Enquiries() {
           searchQuery: query || undefined
         },
       });
+      console.log(response);
 
       if (response.data?.leads) {
         setLeads(response.data.leads);
@@ -146,28 +148,35 @@ function Enquiries() {
   };
 
   // Employee filter handler
-  
+
+  const handleEmployeeFilter = (employeeId) => {
+    setEmployeeFilter(employeeId);
+    setFirst(0);
+    const isFilterActive = employeeId || tagsFilter.length > 0 || searchQuery;
+    const limit = isFilterActive ? 10000 : 100;
+    fetchEnquiries(1, limit, employeeId, tagsFilter, searchQuery);
+  };
+
   const handleGlobalSearch = (query) => {
     setSearchQuery(query);
     if (searchTimeout) clearTimeout(searchTimeout);
     const newTimeout = setTimeout(() => {
       setFirst(0);
-      fetchEnquiries(1, rows, employeeFilter, tagsFilter, query);
+      const isFilterActive = employeeFilter || tagsFilter.length > 0 || query;
+      const limit = isFilterActive ? 10000 : 100;
+      fetchEnquiries(1, limit, employeeFilter, tagsFilter, query);
     }, 500);
     setSearchTimeout(newTimeout);
   };
 
-  const handleEmployeeFilter = (employeeId) => {
-    setEmployeeFilter(employeeId);
-    fetchEnquiries(1, rows, employeeId, tagsFilter, searchQuery);
-  };
-
-  // Updated onPageChange handler
   const onPageChange = (event) => {
-    const currentPage = Math.floor(event.first / event.rows) + 1;
     setFirst(event.first);
     setRows(event.rows);
-    fetchEnquiries(currentPage, event.rows, employeeFilter, tagsFilter, searchQuery);
+    const isFilterActive = employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0);
+    if (!isFilterActive) {
+      const currentPage = Math.floor(event.first / event.rows) + 1;
+      fetchEnquiries(currentPage, event.rows, employeeFilter, tagsFilter, searchQuery);
+    }
   };
 
   // Modal handlers
@@ -221,7 +230,7 @@ function Enquiries() {
               tableTitle={tableTitle}
               onUpdate={() => fetchEnquiries(Math.floor(first / rows) + 1, rows, employeeFilter, tagsFilter)}
               onPageChange={onPageChange}
-            onGlobalSearch={handleGlobalSearch}
+              onGlobalSearch={handleGlobalSearch}
               first={first}
               rows={rows}
               totalRecords={totalRecords}
@@ -231,6 +240,7 @@ function Enquiries() {
               onTagsChange={handleTagsChange}
               tagOptions={tagData || []}
               selectedTags={selectedMyTags}
+              lazy={!(employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
 
@@ -242,7 +252,7 @@ function Enquiries() {
               tableTitle={tableTitle}
               onUpdate={() => fetchEnquiries(Math.floor(first / rows) + 1, rows, employeeFilter, tagsFilter)}
               onPageChange={onPageChange}
-            onGlobalSearch={handleGlobalSearch}
+              onGlobalSearch={handleGlobalSearch}
               first={first}
               rows={rows}
               totalRecords={totalRecords}
@@ -252,6 +262,7 @@ function Enquiries() {
               onTagsChange={handleTagsChange}
               tagOptions={tagData || []}
               selectedTags={selectedMyTags}
+              lazy={!(employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
 

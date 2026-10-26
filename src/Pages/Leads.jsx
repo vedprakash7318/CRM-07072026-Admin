@@ -117,7 +117,9 @@ function Leads() {
     // Reset pagination when filter changes
     setFirst(0);
     // Fetch leads with the new tags filter
-    fetchLeads(1, rows, employeeFilter, tags, searchQuery);
+    const isFilterActive = employeeFilter || searchQuery || (tags && tags.length > 0);
+    const limit = isFilterActive ? 10000 : 100;
+    fetchLeads(1, limit, employeeFilter, tags, searchQuery);
   };
 
   // Initial data fetch
@@ -179,6 +181,33 @@ function Leads() {
     }
   };
 
+  const fetchRange = async (from, to) => {
+    try {
+      const response = await axios.get(`${APi_Url}/digicoder/crm/api/v1/lead/getall/${AdminId}`, {
+        params: {
+          page: 1,
+          limit: to,
+          leadAssignedTo: employeeFilter !== null ? employeeFilter : undefined,
+          tags: tagsFilter && tagsFilter.length > 0 ? tagsFilter.join(',') : undefined,
+          searchQuery: searchQuery || undefined
+        },
+      });
+
+      if (response.data?.success) {
+        return response.data.leads.slice(from - 1, to);
+      }
+      return [];
+    } catch (error) {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to fetch range.',
+        life: 3000,
+      });
+      return [];
+    }
+  };
+
   // Employee filter handler
   
   const handleGlobalSearch = (query) => {
@@ -186,22 +215,29 @@ function Leads() {
     if (searchTimeout) clearTimeout(searchTimeout);
     const newTimeout = setTimeout(() => {
       setFirst(0);
-      fetchLeads(1, rows, employeeFilter, tagsFilter, query);
+      const isFilterActive = employeeFilter || tagsFilter.length > 0 || query;
+      const limit = isFilterActive ? 10000 : 100;
+      fetchLeads(1, limit, employeeFilter, tagsFilter, query);
     }, 500);
     setSearchTimeout(newTimeout);
   };
 
   const handleEmployeeFilter = (employeeId) => {
     setEmployeeFilter(employeeId);
-    fetchLeads(1, rows, employeeId, tagsFilter, searchQuery);
+    setFirst(0);
+    const isFilterActive = employeeId || tagsFilter.length > 0 || searchQuery;
+    const limit = isFilterActive ? 10000 : 100;
+    fetchLeads(1, limit, employeeId, tagsFilter, searchQuery);
   };
 
-  // Updated onPageChange handler
   const onPageChange = (event) => {
-    const currentPage = Math.floor(event.first / event.rows) + 1;
     setFirst(event.first);
     setRows(event.rows);
-    fetchLeads(currentPage, event.rows, employeeFilter, tagsFilter, searchQuery); // Include both filters
+    const isFilterActive = employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0);
+    if (!isFilterActive) {
+      const currentPage = Math.floor(event.first / event.rows) + 1;
+      fetchLeads(currentPage, event.rows, employeeFilter, tagsFilter, searchQuery);
+    }
   };
 
   // File upload handler
@@ -460,15 +496,6 @@ function Leads() {
     return [...selectedTags.slice(0, MAX_VISIBLE_TAGS)];
   };
 
-  // Clear all filters function
-  // const clearAllFilters = () => {
-  //   setEmployeeFilter(null);
-  //   setTagsFilter([]);
-  //   setSelectedMyTags([]);
-  //   setFirst(0);
-  //   fetchLeads(1, rows);
-  // };
-
   return (
     <div>
       <Toast ref={toast} />
@@ -485,17 +512,6 @@ function Leads() {
               />
               <button onClick={handleShow}>Import Leads</button>
               <button onClick={handleAdd}>Add Lead</button>
-              {/* {(employeeFilter || tagsFilter.length > 0) && (
-                <button 
-                  onClick={clearAllFilters}
-                  style={{
-                    backgroundColor: '#6c757d',
-                    color: 'white'
-                  }}
-                >
-                  Clear All Filters
-                </button>
-              )} */}
             </div>
           </div>
 
@@ -519,6 +535,9 @@ function Leads() {
               onTagsChange={handleTagsChange}
               tagOptions={tagData || []}
               selectedTags={selectedMyTags}
+              onGlobalSearch={handleGlobalSearch}
+              fetchRange={fetchRange}
+              lazy={!(employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
           <br /><br />
@@ -547,6 +566,9 @@ function Leads() {
               onTagsChange={handleTagsChange}
               tagOptions={tagData || []}
               selectedTags={selectedMyTags}
+              onGlobalSearch={handleGlobalSearch}
+              fetchRange={fetchRange}
+              lazy={!(employeeFilter || searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
           <br /><br />

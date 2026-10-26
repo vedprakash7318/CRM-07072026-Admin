@@ -34,7 +34,7 @@ function UnassignedLeads() {
   const [buttonTitle, setButtonTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [first, setFirst] = useState(0);
-  const [rows, setRows] = useState(500);
+  const [rows, setRows] = useState(100);
   const [totalRecords, setTotalRecords] = useState(0);
   const [tableTitle] = useState('Unassigned Leads');
 
@@ -48,7 +48,9 @@ function UnassignedLeads() {
     if (searchTimeout) clearTimeout(searchTimeout);
     const newTimeout = setTimeout(() => {
       setFirst(0);
-      fetchUnassignedLeads(1, rows, employeeFilter, tagsFilter, query);
+      const isFilterActive = query || tagsFilter.length > 0;
+      const limit = isFilterActive ? 10000 : 100;
+      fetchUnassignedLeads(1, limit, tagsFilter, query);
     }, 500);
     setSearchTimeout(newTimeout);
   };
@@ -58,8 +60,10 @@ function UnassignedLeads() {
     setTagsFilter(tags);
     // Reset pagination when filter changes
     setFirst(0);
+    const isFilterActive = searchQuery || (tags && tags.length > 0);
+    const limit = isFilterActive ? 10000 : 100;
     // Fetch leads with the new tags filter
-    fetchUnassignedLeads(1, rows, tags, searchQuery);
+    fetchUnassignedLeads(1, limit, tags, searchQuery);
   };
 
   // Initial data fetch
@@ -112,12 +116,35 @@ function UnassignedLeads() {
     }
   };
 
-  // Updated onPageChange handler
+  const fetchRange = async (from, to) => {
+    try {
+      const response = await axios.get(`${APi_Url}/digicoder/crm/api/v1/lead/getUnassignedLeads/${AdminId}`, {
+        params: {
+          page: 1,
+          limit: to,
+          tags: tagsFilter && tagsFilter.length > 0 ? tagsFilter.join(',') : undefined,
+          searchQuery: searchQuery || undefined
+        },
+      });
+
+      if (response.data?.leads) {
+        return response.data.leads.slice(from - 1, to);
+      }
+      return [];
+    } catch (error) {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to fetch range.' });
+      return [];
+    }
+  };
+
   const onPageChange = (event) => {
-    const currentPage = Math.floor(event.first / event.rows) + 1;
     setFirst(event.first);
     setRows(event.rows);
-    fetchUnassignedLeads(currentPage, event.rows, tagsFilter, searchQuery);
+    const isFilterActive = searchQuery || (tagsFilter && tagsFilter.length > 0);
+    if (!isFilterActive) {
+      const currentPage = Math.floor(event.first / event.rows) + 1;
+      fetchUnassignedLeads(currentPage, event.rows, tagsFilter, searchQuery);
+    }
   };
 
   // Modal handlers
@@ -137,14 +164,6 @@ function UnassignedLeads() {
     setIsModalOpen(false);
     // Refresh leads after closing modal
     fetchUnassignedLeads();
-  };
-
-  // Clear all filters function
-  const clearAllFilters = () => {
-    setTagsFilter([]);
-    setSelectedMyTags([]);
-    setFirst(0);
-    fetchUnassignedLeads(1, rows);
   };
 
   return (
@@ -178,7 +197,9 @@ function UnassignedLeads() {
               selectedTags={selectedMyTags}
               showAssignButton={true} // Option to show assign button in each row
               onAssignSuccess={fetchUnassignedLeads}
-            onGlobalSearch={handleGlobalSearch}
+              onGlobalSearch={handleGlobalSearch}
+              fetchRange={fetchRange}
+              lazy={!(searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
 
@@ -199,7 +220,9 @@ function UnassignedLeads() {
               selectedTags={selectedMyTags}
               showAssignButton={true} // Option to show assign button in each row
               onAssignSuccess={fetchUnassignedLeads}
-            onGlobalSearch={handleGlobalSearch}
+              onGlobalSearch={handleGlobalSearch}
+              fetchRange={fetchRange}
+              lazy={!(searchQuery || (tagsFilter && tagsFilter.length > 0))}
             />
           </div>
 

@@ -32,7 +32,7 @@ const SendNotification = () => {
       
       const statusMap = {};
       empList.forEach(emp => {
-        statusMap[emp._id] = emp.fcmToken ? "✅ Ready" : "⚠️ No Token";
+        statusMap[emp._id] = (emp.fcmTokens && emp.fcmTokens.length > 0) ? "✅ Ready" : "⚠️ No Token";
       });
       setEmployeeStatus(statusMap);
       

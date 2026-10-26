@@ -5,6 +5,7 @@ import axios from 'axios';
 import { FaEye, FaTrash, FaSearch, FaTimes } from 'react-icons/fa';
 import './CSS/DateWiseTable.css';
 import Dashboard from "../Components/Dashboard";
+import Skeleton from '@mui/material/Skeleton';
 
 const DateWiseTable = () => {
   const location = useLocation();
@@ -145,12 +146,16 @@ const DateWiseTable = () => {
 
   if (loadingData) {
     return (
-      <div className="dateWise-data-container">
-        <div className="dateWise-loader-container">
-          <div className="dateWise-loader"></div>
-          <p>Loading data...</p>
+      <Dashboard>
+        <div style={{ padding: "20px" }}>
+           <Skeleton variant="rectangular" height={60} style={{ marginBottom: "20px", borderRadius: "8px" }} />
+           <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+           <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+           <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+           <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+           <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
         </div>
-      </div>
+      </Dashboard>
     );
   }
 
@@ -187,8 +192,8 @@ const DateWiseTable = () => {
           {/* Status Filter */}
           <div className="dateWise-filter-group">
             {loadingStatuses ? (
-              <div className="dateWise-filter-loader">
-                <div className="dateWise-small-loader"></div>
+              <div style={{ width: '100%', height: '40px', display: 'flex', alignItems: 'center' }}>
+                 <Skeleton variant="rectangular" width="100%" height={36} style={{ borderRadius: "4px" }} />
               </div>
             ) : (
               <select
@@ -212,8 +217,8 @@ const DateWiseTable = () => {
           {/* Tags Filter */}
           <div className="dateWise-filter-group">
             {loadingTags ? (
-              <div className="dateWise-filter-loader">
-                <div className="dateWise-small-loader"></div>
+              <div style={{ width: '100%', height: '40px', display: 'flex', alignItems: 'center' }}>
+                 <Skeleton variant="rectangular" width="100%" height={36} style={{ borderRadius: "4px" }} />
               </div>
             ) : (
               <MultiSelect

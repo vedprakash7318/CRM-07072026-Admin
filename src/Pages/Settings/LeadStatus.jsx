@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Modal from 'react-bootstrap/Modal';
 import Dashboard from '../../Components/Dashboard';
+import Skeleton from '@mui/material/Skeleton';
 import { fetchLeadStatus } from '../../Features/LeadSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -206,18 +207,23 @@ function LeadStatus() {
               </div>
 
               {loading ? (
-                <div className="loader-wrapper">
-                  <div className="custom-loader"></div>
+                <div style={{ padding: "20px" }}>
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
                 </div>
-              ) : Array.isArray(LeadStatusData) && LeadStatusData.length > 0 ? (
+              ) : (Array.isArray(LeadStatusData) && LeadStatusData.length > 0 ? (
                 <DataTable value={LeadStatusData} stripedRows bordered>
                   <Column body={srNoTemplate} header="Sr. No." sortable />
                   <Column field="leadStatusText" header="Status" sortable />
+                  <Column field="usageCount" header="Usage Count" sortable />
                   <Column header="Action" body={actionBodyTemplate} />
                 </DataTable>
               ) : (
-                <div style={{ textAlign: 'center', padding: '20px' }}>No lead status data available</div>
-              )}
+                <div style={{ textAlign: 'center', padding: '20px' }}>No Status data available</div>
+              ))}
 
               {/* Modal for Add New Lead Status */}
               <Modal

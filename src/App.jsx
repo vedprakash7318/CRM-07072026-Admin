@@ -3,6 +3,7 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter as Router,Routes,Route } from 'react-router-dom'
 import AdminDashboard from './Pages/AdminDashboard'
+import EmployeeReport from './Pages/EmployeeReport';
 import AssignedLead from './Pages/AssignedLeads';
 import UnassignedLead from './Pages/UnassignedLeads'
 import Enquiries from './Pages/Enquiries';
@@ -24,12 +25,13 @@ import PasswordResetPage from './Components/PasswordResetPage';
 import DateWiseTable from './Pages/DateWiseTable';
 import Searching from './Pages/Searching';
 import EmployeeWorkStats from './Pages/EmployeeWorkStats';
-import EmployeeDateReport from './Pages/EmployeeDateReport';
 import Services from './Pages/Settings/Services';
 import AdminTagRequests from './Pages/AdminTagRequests';
 import LeadRequests from './Pages/LeadRequests';
 import SendNotification from './Pages/SendNotification';
 import TagParent from './Pages/Settings/TagParent';
+import ExcelLeadsAdmin from './Pages/ExcelLeadsAdmin';
+import FullExcelLeads from './Pages/FullExcelLeads';
 
 function App() {
 
@@ -40,6 +42,7 @@ function App() {
         <Routes>
           <Route path='/' element={<Login/>}/>
           <Route path='/dashboard' element={<AdminDashboard/>}/>
+          <Route path="/employee-report" element={<EmployeeReport/>}/>
           <Route path='/forget-password' element={<PasswordResetPage/>}/>
           <Route path='/leads' element={<Leads/>}/>
           <Route path='/assignedLeads' element={<AssignedLead/>}/>
@@ -48,8 +51,6 @@ function App() {
           <Route  path='/profile' element={<Profile/>}/>
           <Route  path='/exportNumbers' element={<ExportNumbers/>}/>
           <Route  path='/employee/work-stats' element={<EmployeeWorkStats/>}/>
-          <Route  path='/employee/date-report' element={<EmployeeDateReport/>}/>
-          <Route  path='/employee/date-report/:empId' element={<EmployeeDateReport/>}/>
           <Route path='/employee/export/:startDate/:endDate' element={<DateWiseTable/>} />
           <Route  path='/employee/employeefullpage' element={<EmployeesFullPage/>}/>
           <Route path='/dateWiseFilter' element={<DateWiseTable/>}/>
@@ -68,11 +69,13 @@ function App() {
 
 
           <Route  path='/fullLeads' element={<FullLeads/>}/>
+          <Route  path='/fullExcelLeads' element={<FullExcelLeads/>}/>
 
           <Route  path='/request' element={<AdminTagRequests/>}/>
           <Route  path='/lead-requests' element={<LeadRequests/>}/>
           
           <Route path='/enquiries' element={<Enquiries />} />
+          <Route path='/excel-leads-admin' element={<ExcelLeadsAdmin />} />
           
         </Routes>
       </Router>      

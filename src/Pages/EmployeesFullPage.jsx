@@ -17,7 +17,7 @@ import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import CancelIcon from '@mui/icons-material/Cancel';
 import TagIcon from '@mui/icons-material/Tag';
-import CircularProgress from '@mui/material/CircularProgress';
+import Skeleton from '@mui/material/Skeleton';
 
 import './CSS/EmployeesFullPage.css';
 
@@ -58,7 +58,8 @@ function EmployeesFullPage() {
     totalFollowups: 0,
     todayReminders: 0,
     missedLeads: 0,
-    uniqueTagNames: []
+    uniqueTagNames: [],
+    assignedColleges: []
   });
 
   const [formData, setFormData] = useState({
@@ -152,6 +153,7 @@ function EmployeesFullPage() {
     ).length;
 
     const uniqueTagNames = reportData.uniqueTagNames;
+    const assignedColleges = reportData.assignedColleges || [];
 
     return {
       totalAssigned,
@@ -162,6 +164,7 @@ function EmployeesFullPage() {
       totalFollowups,
       leadsWithNoFollowups,
       uniqueTagNames,
+      assignedColleges,
       leadsAdded,
       todayReminders,
       missedLeads
@@ -307,9 +310,7 @@ const handleOpenLeads = (followupsForDate) => {
 
   // Loading component
   const LoadingIndicator = () => (
-    <div className="loading-indicator">
-      <CircularProgress size={24} />
-    </div>
+    <Skeleton variant="text" width={60} height={40} />
   );
 
   return (
@@ -510,8 +511,8 @@ const handleOpenLeads = (followupsForDate) => {
               <span>EMPLOYEE PERFORMANCE REPORT</span>
               <div className="report-filter-buttons">
                 <Button
-                  label="View Assigned Tags"
-                  icon="pi pi-tags"
+                  label="View Assigned Colleges"
+                  icon="pi pi-building"
                   onClick={() => setVisible(true)}
                   className="AssignedTagsBtn"
                 />
@@ -652,28 +653,43 @@ const handleOpenLeads = (followupsForDate) => {
             <Dialog
               className="AssignedTagsContainer"
               header={
-                <div className="dialog-header">
-                  <TagIcon style={{ marginRight: '10px' }} />
-                  <span>Assigned Tags</span>
+                <div className="dialog-header" style={{ display: 'flex', alignItems: 'center' }}>
+                  <TagIcon style={{ marginRight: '10px', color: '#4f46e5' }} />
+                  <span style={{ fontWeight: '700', fontSize: '18px', color: '#1f2937' }}>Assigned Colleges</span>
                 </div>
               }
               visible={visible}
               onHide={() => setVisible(false)}
               footer={footerContent}
+              style={{ width: '50vw' }}
             >
-              <div className="tags-container">
-                {loading.tags ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+              <div className="tags-container" style={{ padding: '10px 0', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {loading.tags || loading.report ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '20px' }}>
                     <LoadingIndicator />
                   </div>
-                ) : reportMetrics.uniqueTagNames.length > 0 ? (
-                  reportMetrics.uniqueTagNames.map((tag, index) => (
-                    <span key={index} className="tag-badge">
-                      {tag}
-                    </span>
+                ) : reportMetrics.assignedColleges.length > 0 ? (
+                  reportMetrics.assignedColleges.map((college, index) => (
+                    <div key={index} className="college-badge" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                      color: "#3730a3",
+                      padding: "8px 16px",
+                      borderRadius: "20px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                      border: "1px solid #a5b4fc"
+                    }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4f46e5", marginRight: "8px" }}></div>
+                      {college}
+                    </div>
                   ))
                 ) : (
-                  <p className="no-tags-message">No tags assigned to this employee's leads</p>
+                  <div style={{ width: '100%', textAlign: 'center', padding: '20px 0', color: '#9ca3af' }}>
+                    <p style={{ fontSize: '15px', margin: 0 }}>No colleges assigned to this employee's leads</p>
+                  </div>
                 )}
               </div>
             </Dialog>

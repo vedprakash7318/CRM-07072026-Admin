@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import './CSS/DynamicTable.css';
 import { Dropdown } from 'primereact/dropdown';
 import AssignTaskModal from './AssignTaskModal';
+import RangeSelectionModal from './RangeSelectionModal';
 import { Toast } from 'primereact/toast';
 import Swal from 'sweetalert2';
 import axios from 'axios';
@@ -24,8 +25,11 @@ export default function DynamicTable({
     totalRecords,
     onEmployeeFilter,
     onTagsChange,
+    onGlobalSearch,
     onUpdate,
-    onAssignSuccess
+    onAssignSuccess,
+    fetchRange,
+    lazy = true
 }) {
     const APi_Url = import.meta.env.VITE_API_URL;
     const [showModal, setShowModal] = useState(false);
@@ -92,6 +96,27 @@ export default function DynamicTable({
     const [rangeEnd, setRangeEnd] = useState();
     const navigate = useNavigate();
 
+    const handleSelectRange = async (from, to) => {
+        if (!fetchRange) {
+            toast.current?.show({ severity: 'warn', summary: 'Unavailable', detail: 'Range selection not supported here' });
+            return;
+        }
+        setLoading(true);
+        try {
+            const leads = await fetchRange(from, to);
+            if (leads && leads.length > 0) {
+                setSelectedRows(leads);
+                toast.current?.show({ severity: 'success', summary: 'Success', detail: `Selected leads from ${from} to ${to}` });
+            } else {
+                toast.current?.show({ severity: 'info', summary: 'Info', detail: 'No leads found in this range' });
+            }
+        } catch (error) {
+            toast.current?.show({ severity: 'error', summary: 'Error', detail: 'Failed to select range' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     function getInitialSelectedTagValues() {
         const savedTags = localStorage.getItem('leadSelectedTags');
         return savedTags ? JSON.parse(savedTags) : [];
@@ -121,6 +146,9 @@ export default function DynamicTable({
         setFilters(_filters);
         setGlobalFilterValue(value);
         setSelectAll(false);
+        if (onGlobalSearch) {
+            onGlobalSearch(value);
+        }
     };
     
     useEffect(() => {
@@ -150,6 +178,10 @@ export default function DynamicTable({
 
         setSelectAll(false);
         setSelectedRows([]);
+
+        if (onGlobalSearch) onGlobalSearch("");
+        if (onTagsChange) onTagsChange([]);
+        if (onEmployeeFilter) onEmployeeFilter(null);
 
         toast.current.show({
             severity: 'info',
@@ -228,7 +260,7 @@ export default function DynamicTable({
             toast.current.show({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Failed to remove employees. Please try again.',
+                detail: error.response?.data?.message || 'Failed to remove employees. Please try again.',
                 life: 3000
             });
         } finally {
@@ -399,6 +431,20 @@ export default function DynamicTable({
                         }}
                     >
                         <i className="ri-filter-off-line" style={{ marginRight: '5px' }}></i>
+                    </button>
+                    <button
+                        onClick={() => setRangeModalOpen(true)}
+                        style={{
+                            backgroundColor: '#f39c12',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '12px 10px',
+                            cursor: 'pointer',
+                            marginRight: '10px'
+                        }}
+                    >
+                        Select Range
                     </button>
                     <button onClick={handleShow} className='assignLeadBtn' style={{ marginRight: '10px' }}>
                         Assign Leads {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
@@ -574,9 +620,24 @@ export default function DynamicTable({
         </div>
     );
 
+    const clearSelection = () => {
+        setSelectedRows([]);
+        setSelectAll(false);
+    };
+
     return (
         <div className="card">
             <Toast ref={toast} />
+
+            <AssignTaskModal
+                show={showModal}
+                handleClose={handleClose}
+                employees={employeeData}
+                selectedData={selectedRows}
+                onUpdate={onUpdate}
+                onAssignSuccess={onAssignSuccess}
+                clearSelection={clearSelection}
+            />
 
             {loading ? (
                 <Loader />
@@ -595,7 +656,7 @@ export default function DynamicTable({
                     totalRecords={totalRecords}
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     removableSort
-                    lazy
+                    lazy={lazy}
                     style={{ borderRadius: "10px" }}
                     rowClassName={rowClassName}
                     selectionMode="single"
@@ -639,19 +700,32 @@ export default function DynamicTable({
 
                     <Column field="name" header="NAME" sortable style={{ width: '15%' }} />
                     <Column field="phone" header="PHONE" sortable style={{ width: '15%' }} />
-                    <Column
-                        header="PRIORITY"
-                        body={(rowData) => rowData?.priority?.priorityText || "NA"}
-                        sortable
-                        style={{ width: '10%', textAlign: "center" }}
-                    />
+                    {tableTitle !== 'Public Enquiries' && (
+                        <Column
+                            header="PRIORITY"
+                            body={(rowData) => rowData?.priority?.priorityText || "NA"}
+                            sortable
+                            style={{ width: '10%', textAlign: "center" }}
+                        />
+                    )}
 
-                    <Column
-                        header="Sources"
-                        body={(rowData) => rowData?.sources?.leadSourcesText || "NA"}
-                        sortable
-                        style={{ width: '10%' }}
-                    />
+                    {tableTitle !== 'Public Enquiries' && (
+                        <Column
+                            header="Sources"
+                            body={(rowData) => rowData?.sources?.leadSourcesText || "NA"}
+                            sortable
+                            style={{ width: '10%' }}
+                        />
+                    )}
+                    
+                    {tableTitle === 'Public Enquiries' && (
+                        <Column
+                            header="Date"
+                            body={(rowData) => rowData?.createdAt ? new Date(rowData.createdAt).toLocaleDateString("en-IN") : "NA"}
+                            sortable
+                            style={{ width: '10%' }}
+                        />
+                    )}
 
                     <Column
                         header="Assigned TO"
@@ -670,6 +744,30 @@ export default function DynamicTable({
                         }}
                         style={{ width: '15%' }}
                     />
+                    {tableTitle === 'Public Enquiries' && (
+                        <Column
+                            header="Accepted By"
+                            body={(rowData) => {
+                                if (!rowData?.acceptedBy) return "NA";
+                                if (typeof rowData.acceptedBy === 'object') return rowData.acceptedBy.empName || "NA";
+                                const emp = rawEmployees?.find(e => e._id === rowData.acceptedBy);
+                                return emp ? emp.empName : "NA";
+                            }}
+                            style={{ width: '10%' }}
+                        />
+                    )}
+                    {tableTitle === 'Public Enquiries' && (
+                        <Column
+                            header="Targeted Emp"
+                            body={(rowData) => {
+                                if (!rowData?.targetedEmployee) return "NA";
+                                if (typeof rowData.targetedEmployee === 'object') return rowData.targetedEmployee.empName || "NA";
+                                const emp = rawEmployees?.find(e => e._id === rowData.targetedEmployee);
+                                return emp ? emp.empName : "NA";
+                            }}
+                            style={{ width: '10%' }}
+                        />
+                    )}
                     <Column header="ACTION" body={actionBodyTemplate} style={{ width: '15%' }} />
                 </DataTable>
             )}
@@ -892,7 +990,11 @@ export default function DynamicTable({
             )}
 
             <Modal isOpen={isModalOpen} onClose={closeModal} title={title} buttonTitle={buttonTitle} leadData={leadData} />
-            <AssignTaskModal show={showModal} handleClose={handleClose} employees={employeeData} selectedData={selectedRows} onUpdate={onUpdate} onAssignSuccess={onAssignSuccess} />
+            <RangeSelectionModal 
+                visible={rangeModalOpen} 
+                onHide={() => setRangeModalOpen(false)} 
+                onSelect={handleSelectRange} 
+            />
         </div>
     );
 }

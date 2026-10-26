@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Skeleton from '@mui/material/Skeleton';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -245,26 +246,10 @@ function FullLeads() {
   };
 
   const FollowupLoader = () => (
-    <div className="followup-loader" style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100px'
-    }}>
-      <div className="spinner" style={{
-        border: '4px solid rgba(0, 0, 0, 0.1)',
-        borderRadius: '50%',
-        borderTop: '4px solid #3454D1',
-        width: '40px',
-        height: '40px',
-        animation: 'spin 1s linear infinite'
-      }}></div>
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+    <div style={{ padding: "20px" }}>
+       <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+       <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+       <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
     </div>
   );
 
@@ -495,12 +480,28 @@ function FullLeads() {
                         <div className="follow-body-header">
                           <div className="followup-srNo">{index + 1}</div>
                           <div>
-                            <span className="cratedBy">Created Date-</span>
-                            <span className="cratedBy">{followUp?.createdAt?.split("T")[0]}</span>
+                            <span className="cratedBy">Created: </span>
+                            <span className="cratedBy">
+                              {followUp?.createdAt ? new Date(followUp.createdAt).toLocaleString('en-IN', {
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: true
+                              }) : "NA"}
+                            </span>
                             <div style={{ marginTop: "5px" }}>
                               <span className="cratedBy">Created By-</span>
                               <span className="cratedBy">{followUp?.followedBy?.empName}</span>
                             </div>
+                            {followUp?.nextFollowupDate && (
+                              <div style={{ marginTop: "5px" }}>
+                                <span className="cratedBy">Next Reminder: </span>
+                                <span className="cratedBy" style={{ color: '#d9534f', fontWeight: 'bold' }}>
+                                  {new Date(followUp.nextFollowupDate).toLocaleString('en-IN', {
+                                    day: '2-digit', month: '2-digit', year: 'numeric',
+                                    hour: '2-digit', minute: '2-digit', hour12: true
+                                  })}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="follow-ups-txt">

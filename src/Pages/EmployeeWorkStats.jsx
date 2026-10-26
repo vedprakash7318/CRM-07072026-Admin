@@ -6,9 +6,9 @@ import {
   TableRow, Chip, CircularProgress, Alert, Tabs, Tab,
   Accordion, AccordionSummary, AccordionDetails, IconButton,
   TextField, Button, Stack, Divider, Avatar, LinearProgress,
-  Tooltip, Badge, CardHeader
+  Tooltip, Badge, CardHeader, Dialog, DialogTitle, DialogContent, DialogActions, Skeleton
 } from '@mui/material';
-import html2canvas from 'html2canvas';
+import { toJpeg, toBlob } from 'html-to-image';
 import {
   ExpandMore as ExpandMoreIcon,
   Person as PersonIcon,
@@ -16,12 +16,10 @@ import {
   Leaderboard as LeadIcon,
   TrendingUp as TrendingIcon,
   CalendarToday as CalendarIcon,
-  FilterList as FilterIcon,
   Refresh as RefreshIcon,
   Assessment as AssessmentIcon,
   Work as WorkIcon,
   Today as TodayIcon,
-  DateRange as DateRangeIcon,
   Download as DownloadIcon,
   Share as ShareIcon,
   Public as PublicIcon
@@ -38,6 +36,11 @@ const EmployeeWorkStats = () => {
   const [expandedEmployee, setExpandedEmployee] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [emailsList, setEmailsList] = useState([]);
+  const [scheduleTime, setScheduleTime] = useState('19:00');
 
   const addedBy = sessionStorage.getItem('AdminId');
   const reportRef = React.useRef(null);
@@ -45,10 +48,31 @@ const EmployeeWorkStats = () => {
   const handleDownloadJPG = async () => {
     if (!reportRef.current) return;
     try {
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      // Expand all accordions before capturing
+      const accordionButtons = reportRef.current.querySelectorAll('.MuiAccordionSummary-root');
+      accordionButtons.forEach(button => {
+        const accordion = button.closest('.MuiAccordion-root');
+        if (accordion && !accordion.classList.contains('Mui-expanded')) {
+          button.click();
+        }
+      });
+
+      // Wait for accordions to expand
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const dataUrl = await toJpeg(reportRef.current, {
+        quality: 1,
+        backgroundColor: '#f8f9fa',
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        },
+        pixelRatio: 1,
+        skipAutoScale: false
+      });
       const link = document.createElement('a');
       link.download = `Employee_Report_${selectedDate}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg');
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error('Error downloading image', err);
@@ -58,25 +82,54 @@ const EmployeeWorkStats = () => {
   const handleShareReport = async () => {
     if (!reportRef.current) return;
     try {
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `Employee_Report_${selectedDate}.jpg`, { type: 'image/jpeg' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: `Employee Work Report - ${selectedDate}`,
-            text: 'Here is the employee work statistics report.',
-            files: [file]
-          });
-        } else {
-          // Fallback if sharing is not supported
-          handleDownloadJPG();
+      // Expand all accordions before capturing
+      const accordionButtons = reportRef.current.querySelectorAll('.MuiAccordionSummary-root');
+      accordionButtons.forEach(button => {
+        const accordion = button.closest('.MuiAccordion-root');
+        if (accordion && !accordion.classList.contains('Mui-expanded')) {
+          button.click();
         }
-      }, 'image/jpeg');
+      });
+
+      // Wait for accordions to expand
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const blob = await toBlob(reportRef.current, {
+        backgroundColor: '#f8f9fa',
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        },
+        pixelRatio: 1,
+        skipAutoScale: false
+      });
+      if (!blob) return;
+      const file = new File([blob], `Employee_Report_${selectedDate}.jpg`, { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Employee Work Report - ${selectedDate}`,
+          text: 'Here is the employee work statistics report.',
+          files: [file]
+        });
+      } else {
+        handleDownloadJPG();
+      }
     } catch (err) {
       console.error('Error sharing report', err);
     }
   };
+
+  useEffect(() => {
+    if(addedBy) {
+      axios.get(`${APi_Url}/digicoder/crm/api/v1/report-settings/get/${addedBy}`)
+        .then(res => {
+          if(res.data.success && res.data.settings) {
+            setEmailsList(res.data.settings.emails || []);
+            setScheduleTime(res.data.settings.scheduleTime || '19:00');
+          }
+        }).catch(err => console.error("Error fetching report settings:", err));
+    }
+  }, [addedBy, APi_Url]);
 
   useEffect(() => {
     fetchData();
@@ -94,22 +147,22 @@ const EmployeeWorkStats = () => {
 
       console.log(response);
 
-      // Check if the response has the expected structure
       if (response.data.success && response.data.data) {
         setData(response.data.data);
       } else if (response.data.employees) {
-        // Fallback for old structure
         setData({
           overall: {
             totalEmployees: response.data.employees.length,
             totalLeadsAdded: response.data.employees.reduce((sum, emp) => sum + emp.leadsAdded, 0),
             totalFollowups: response.data.employees.reduce((sum, emp) => sum + emp.followupsDone, 0),
-            totalUniqueLeadsInFollowups: 0
+            totalUniqueLeadsInFollowups: 0,
+            totalPublicLeadsAccepted: 0
           },
           employees: response.data.employees.map(emp => ({
             ...emp,
             leadsAdded: { count: emp.leadsAdded, details: [] },
-            followupsDone: { count: emp.followupsDone, uniqueLeads: 0, details: [] }
+            followupsDone: { count: emp.followupsDone, uniqueLeads: 0, details: [] },
+            publicLeadsAccepted: 0
           }))
         });
       } else {
@@ -129,6 +182,31 @@ const EmployeeWorkStats = () => {
     setIsRefreshing(true);
     await fetchData();
     setIsRefreshing(false);
+  };
+
+  const handleSaveEmailSettings = async () => {
+    try {
+      await axios.post(`${APi_Url}/digicoder/crm/api/v1/report-settings/update`, {
+        adminId: addedBy,
+        emails: emailsList,
+        scheduleTime
+      });
+      alert("Email Settings Saved Successfully!");
+      setEmailModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert("Error saving settings");
+    }
+  };
+
+  const handleSendUrgent = async () => {
+    try {
+      const res = await axios.post(`${APi_Url}/digicoder/crm/api/v1/report-settings/send-urgent`, { adminId: addedBy });
+      if(res.data.success) alert("Email sent successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Error sending email");
+    }
   };
 
   const handleTabChange = (event, newValue) => {
@@ -172,11 +250,32 @@ const EmployeeWorkStats = () => {
   if (loading) {
     return (
       <Dashboard active={'EmployeeWorkStats'}>
-        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
-            Loading employee statistics...
-          </Typography>
+        <Box sx={{ p: 3, minWidth: '1200px' }}>
+          {/* Header Skeleton */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+            <Box>
+              <Skeleton variant="text" width={250} height={50} />
+              <Skeleton variant="text" width={180} height={30} />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Skeleton variant="rectangular" width={150} height={40} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" width={100} height={40} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" width={100} height={40} sx={{ borderRadius: 1 }} />
+            </Box>
+          </Box>
+          
+          {/* Summary Cards Skeleton */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {[1, 2, 3, 4, 5].map((item) => (
+              <Grid item xs={12} sm={6} md={2.4} key={item}>
+                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ))}
+          </Grid>
+          
+          {/* Table Skeleton */}
+          <Skeleton variant="rectangular" height={60} sx={{ mb: 2, borderRadius: 2 }} />
+          <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
         </Box>
       </Dashboard>
     );
@@ -204,192 +303,305 @@ const EmployeeWorkStats = () => {
 
   const { overall, employees } = data;
 
+  // Format date for display
+  const formattedDate = new Date(selectedDate).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  const dateDisplay = new Date(selectedDate).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+
   return (
     <Dashboard active={'EmployeeWorkStats'}>
-      <Box sx={{ p: 3 }} ref={reportRef} id="report-content">
+      <Box
+        sx={{
+          p: 3,
+          minWidth: '1200px', // Ensure minimum width
+          overflow: 'visible' // Prevent clipping
+        }}
+        ref={reportRef}
+        id="report-content"
+      >
         {/* Header Section */}
-        <Card elevation={2} sx={{ mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          <CardContent sx={{ pb: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-              <Box>
-                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  Employee Work Statistics
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <CalendarIcon sx={{ mr: 1 }} />
-                  <Typography variant="h6">
-                    {new Date(selectedDate).toLocaleDateString('en-US', {
-                      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                    })}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box display="flex" gap={2} flexWrap="wrap">
-                {/* Export Buttons Section */}
-                <Card sx={{ minWidth: 200, background: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                  <CardContent sx={{ pb: '16px !important', p: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<DownloadIcon />}
-                        onClick={handleDownloadJPG}
-                        sx={{ bgcolor: 'white', color: '#667eea', '&:hover': { bgcolor: '#f0f0f0' } }}
-                      >
-                        JPG
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<ShareIcon />}
-                        onClick={handleShareReport}
-                        sx={{ bgcolor: 'white', color: '#764ba2', '&:hover': { bgcolor: '#f0f0f0' } }}
-                      >
-                        Share
-                      </Button>
-                    </Stack>
-                  </CardContent>
-                </Card>
-
-                {/* Date Filter Section */}
-                <Card sx={{ minWidth: 300 }}>
-                  <CardContent sx={{ pb: '16px !important' }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <TextField
-                        type="date"
-                        value={selectedDate}
-                        onChange={handleDateChange}
-                        size="small"
-                        sx={{ flexGrow: 1 }}
-                        InputProps={{
-                          startAdornment: <DateRangeIcon sx={{ mr: 1, color: 'action.active' }} />
-                        }}
-                      />
-                      <Tooltip title="Today">
-                        <IconButton onClick={setToday} color="primary">
-                          <TodayIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Refresh">
-                        <IconButton onClick={handleRefresh} disabled={isRefreshing}>
-                          <RefreshIcon className={isRefreshing ? 'spinning' : ''} />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Box>
+        <Box sx={{ mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2d3436' }}>
+                Welcome Back!
+              </Typography>
+              <Typography variant="subtitle1" sx={{ color: '#636e72', mt: 0.5 }}>
+                {formattedDate}
+              </Typography>
             </Box>
-          </CardContent>
-        </Card>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <TextField
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                size="small"
+                sx={{
+                  bgcolor: 'white',
+                  borderRadius: 1,
+                  '& .MuiInputBase-root': { height: '32px', fontSize: '14px' }
+                }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={setToday}
+                sx={{
+                  color: '#2d3436',
+                  borderColor: '#b2bec3',
+                  '&:hover': { bgcolor: '#f8f9fa', borderColor: '#636e72' },
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 1
+                }}
+              >
+                Today
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setEmailModalOpen(true)}
+                sx={{
+                  color: '#6c5ce7',
+                  borderColor: '#6c5ce7',
+                  '&:hover': { bgcolor: '#f3f0ff', borderColor: '#5f3dc4' },
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 1
+                }}
+              >
+                Setup Auto Email
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleDownloadJPG}
+                sx={{
+                  bgcolor: '#6c5ce7',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#5f3dc4' },
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 3,
+                  borderRadius: '8px'
+                }}
+              >
+                JPG
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleShareReport}
+                sx={{
+                  bgcolor: '#00b894',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#00a381' },
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  px: 3,
+                  borderRadius: '8px'
+                }}
+              >
+                SHARE
+              </Button>
+            </Box>
+          </Box>
+          <Typography variant="body2" sx={{ color: '#b2bec3', mt: 0.5 }}>
+            {dateDisplay}
+          </Typography>
+        </Box>
 
-        {/* Enhanced Summary Cards */}
+        {/* Summary Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={4} sx={{ height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="between">
-                  <Box sx={{ color: 'white' }}>
-                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
+            <Card sx={{
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid #e8ecf1'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#b2bec3', fontWeight: '500', fontSize: '14px' }}>
                       Total Employees
                     </Typography>
-                    <Typography variant="h3" component="div" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2d3436', mt: 0.5 }}>
                       {overall.totalEmployees}
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                    <PersonIcon sx={{ fontSize: 32 }} />
-                  </Avatar>
+                  <Box sx={{
+                    bgcolor: '#e8ecf1',
+                    borderRadius: '10px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <PersonIcon sx={{ color: '#6c5ce7', fontSize: 28 }} />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={4} sx={{ height: '100%', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="between">
-                  <Box sx={{ color: 'white' }}>
-                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
-                      Leads Added
+            <Card sx={{
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid #e8ecf1'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#b2bec3', fontWeight: '500', fontSize: '14px' }}>
+                      Loads Added
                     </Typography>
-                    <Typography variant="h3" component="div" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2d3436', mt: 0.5 }}>
                       {overall.totalLeadsAdded}
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                    <LeadIcon sx={{ fontSize: 32 }} />
-                  </Avatar>
+                  <Box sx={{
+                    bgcolor: '#e8ecf1',
+                    borderRadius: '10px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <LeadIcon sx={{ color: '#00b894', fontSize: 28 }} />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={4} sx={{ height: '100%', background: 'linear-gradient(135deg, #3742fa 0%, #2f3542 100%)' }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="between">
-                  <Box sx={{ color: 'white' }}>
-                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
+            <Card sx={{
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid #e8ecf1'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#b2bec3', fontWeight: '500', fontSize: '14px' }}>
                       Followups Done
                     </Typography>
-                    <Typography variant="h3" component="div" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2d3436', mt: 0.5 }}>
                       {overall.totalFollowups}
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                    <FollowupIcon sx={{ fontSize: 32 }} />
-                  </Avatar>
+                  <Box sx={{
+                    bgcolor: '#e8ecf1',
+                    borderRadius: '10px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <FollowupIcon sx={{ color: '#0984e3', fontSize: 28 }} />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={4} sx={{ height: '100%', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="between">
-                  <Box sx={{ color: 'white' }}>
-                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
+            <Card sx={{
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid #e8ecf1'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#b2bec3', fontWeight: '500', fontSize: '14px' }}>
                       Unique Leads
                     </Typography>
-                    <Typography variant="h3" component="div" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2d3436', mt: 0.5 }}>
                       {overall.totalUniqueLeadsInFollowups}
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                    <TrendingIcon sx={{ fontSize: 32 }} />
-                  </Avatar>
+                  <Box sx={{
+                    bgcolor: '#e8ecf1',
+                    borderRadius: '10px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <TrendingIcon sx={{ color: '#e17055', fontSize: 28 }} />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={4} sx={{ height: '100%', background: 'linear-gradient(135deg, #ff9a44 0%, #fc6076 100%)' }}>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="between">
-                  <Box sx={{ color: 'white' }}>
-                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
+            <Card sx={{
+              borderRadius: 2,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid #e8ecf1'
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: '#b2bec3', fontWeight: '500', fontSize: '14px' }}>
                       Public Leads Accepted
                     </Typography>
-                    <Typography variant="h3" component="div" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#2d3436', mt: 0.5 }}>
                       {overall.totalPublicLeadsAccepted || 0}
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
-                    <PublicIcon sx={{ fontSize: 32 }} />
-                  </Avatar>
+                  <Box sx={{
+                    bgcolor: '#e8ecf1',
+                    borderRadius: '10px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <PublicIcon sx={{ color: '#fd79a8', fontSize: 28 }} />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
         </Grid>
 
-        {/* Enhanced Tabs */}
-        <Paper sx={{ mb: 3 }} elevation={3}>
-          <Tabs value={selectedTab} onChange={handleTabChange} centered variant="fullWidth">
+        {/* Tabs */}
+        <Paper sx={{ mb: 3, borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            centered
+            variant="fullWidth"
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 'bold',
+                color: '#b2bec3',
+                '&.Mui-selected': {
+                  color: '#6c5ce7'
+                }
+              },
+              '& .MuiTabs-indicator': {
+                bgcolor: '#6c5ce7'
+              }
+            }}
+          >
             <Tab
               label={
                 <Box display="flex" alignItems="center" gap={1}>
@@ -410,22 +622,22 @@ const EmployeeWorkStats = () => {
         </Paper>
 
         {selectedTab === 0 ? (
-          // Enhanced Employee Performance View
-          <Card elevation={3}>
+          // Employee Performance View
+          <Card elevation={3} sx={{ borderRadius: 2 }}>
             <CardHeader
               title="Employee Performance Overview"
               subheader={`Performance data for ${employees.length} employees`}
               avatar={<AssessmentIcon />}
             />
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ overflow: 'visible' }}>
+              <Table sx={{ minWidth: 1200 }}>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Employee</TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 'bold', minWidth: 200 }}>Employee</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Leads Added</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Followups Done</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Unique Leads</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Public Leads Accepted</TableCell>
+                    <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Public Leads</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Total Work / Target</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Performance</TableCell>
                     <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Progress</TableCell>
@@ -435,7 +647,7 @@ const EmployeeWorkStats = () => {
                   {employees.map((employee) => (
                     <TableRow key={employee.employee._id} hover sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
                       <TableCell>
-                        <Box display="flex" alignItems="center" gap={2}>
+                        <Box style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <Avatar sx={{ bgcolor: 'primary.main' }}>
                             {employee.employee.name.charAt(0).toUpperCase()}
                           </Avatar>
@@ -509,7 +721,7 @@ const EmployeeWorkStats = () => {
             </TableContainer>
           </Card>
         ) : (
-          // Enhanced Detailed View with Accordions
+          // Detailed View
           <Box>
             <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
               Detailed Employee Activities
@@ -575,9 +787,8 @@ const EmployeeWorkStats = () => {
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={{ p: 3 }}>
-                  <Grid container >
-
-                    <Grid item xs={12} >
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
                       <Card variant="outlined" sx={{ height: '100%' }}>
                         <CardHeader
                           title={`Followups Done (${employee.followupsDone.count})`}
@@ -620,13 +831,6 @@ const EmployeeWorkStats = () => {
                                       </TableCell>
                                     </TableRow>
                                   ))}
-                                  {employee.followupsDone.details.length > 10 && (
-                                    <TableRow>
-                                      <TableCell colSpan={4} align="center" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
-                                        ... and {employee.followupsDone.details.length - 10} more followups
-                                      </TableCell>
-                                    </TableRow>
-                                  )}
                                 </TableBody>
                               </Table>
                             </TableContainer>
@@ -641,7 +845,7 @@ const EmployeeWorkStats = () => {
                         </CardContent>
                       </Card>
                     </Grid>
-                    <Grid item xs={12} >
+                    <Grid item xs={12} md={6}>
                       <Card variant="outlined" sx={{ height: '100%' }}>
                         <CardHeader
                           title={`Leads Added (${employee.leadsAdded.count})`}
@@ -681,7 +885,6 @@ const EmployeeWorkStats = () => {
                         </CardContent>
                       </Card>
                     </Grid>
-
                   </Grid>
                 </AccordionDetails>
               </Accordion>
@@ -700,6 +903,70 @@ const EmployeeWorkStats = () => {
           to { transform: rotate(360deg); }
         }
       `}</style>
+
+      <Dialog open={emailModalOpen} onClose={() => setEmailModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Automated Report Email Settings</DialogTitle>
+        <DialogContent dividers>
+          <Box mb={3}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>Send Time (Daily)</Typography>
+            <TextField 
+              type="time" 
+              value={scheduleTime} 
+              onChange={(e) => setScheduleTime(e.target.value)}
+              size="small"
+              fullWidth 
+            />
+          </Box>
+          <Box mb={2}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>Recipient Emails</Typography>
+            <Box display="flex" gap={1} mb={2}>
+              <TextField 
+                placeholder="Enter email..." 
+                value={emailInput} 
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if(e.key === 'Enter' && emailInput.includes('@')) {
+                    if(!emailsList.includes(emailInput)) setEmailsList([...emailsList, emailInput]);
+                    setEmailInput('');
+                  }
+                }}
+                size="small"
+                fullWidth 
+              />
+              <Button 
+                variant="contained" 
+                onClick={() => {
+                  if(emailInput.includes('@') && !emailsList.includes(emailInput)) {
+                    setEmailsList([...emailsList, emailInput]);
+                    setEmailInput('');
+                  }
+                }}
+                sx={{ bgcolor: '#0984e3' }}
+              >Add</Button>
+            </Box>
+            <Box display="flex" gap={1} flexWrap="wrap">
+              {emailsList.map((email, idx) => (
+                <Chip 
+                  key={idx} 
+                  label={email} 
+                  onDelete={() => setEmailsList(emailsList.filter(e => e !== email))} 
+                  color="primary" 
+                  variant="outlined" 
+                />
+              ))}
+            </Box>
+          </Box>
+          <Divider sx={{ my: 3 }} />
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="body2" color="text.secondary">Need the report right now?</Typography>
+            <Button variant="outlined" color="warning" onClick={handleSendUrgent}>Send Urgent Now</Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEmailModalOpen(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleSaveEmailSettings} variant="contained" sx={{ bgcolor: '#6c5ce7' }}>Save Settings</Button>
+        </DialogActions>
+      </Dialog>
     </Dashboard>
   );
 };

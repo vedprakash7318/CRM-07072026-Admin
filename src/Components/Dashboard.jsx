@@ -16,7 +16,8 @@ import {
   FileText,
   GitBranch,
   BarChart3,
-  Filter
+  Filter,
+  Settings
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import "./CSS/Dashboard.css";
@@ -42,19 +43,15 @@ const Dashboard = ({ children }) => {
       children: [
         { label: "Total Leads", path: "/leads" },
         { label: "Assigned Leads", path: "/assignedLeads" },
-        { label: "Unassigned Leads", path: "/unassignedLeads" }
+        { label: "Unassigned Leads", path: "/unassignedLeads" },
+        { label: "Excel Upload Leads", path: "/excel-leads-admin" }
       ]
     },
 
-    { label: "Search Leads", path: "/search", icon: Search },
-    { label: "Employee", path: "/employee", icon: UserCheck },
-    { label: "Leads Status", path: "/status", icon: Timer },
-    { label: "Lead Sources", path: "/source", icon: Layers },
-    { label: "Priority", path: "/priority", icon: Star },
-    { label: "Services", path: "/services", icon: Briefcase },
 
-    { label: "Tags", path: "/tag", icon: Tag },
-    { label: "Tag Parent", path: "/tag-parent", icon: GitBranch },
+    { label: "Search Leads", path: "/search", icon: Search },
+    { label: "Enquiries", path: "/enquiries", icon: Users },
+    { label: "Employee", path: "/employee", icon: UserCheck },
 
     { label: "Notification", path: "/notifications", icon: Bell },
     {
@@ -66,8 +63,31 @@ const Dashboard = ({ children }) => {
         { label: "Lead Transfers", path: "/lead-requests" }
       ]
     },
-    { label: "Enquiries", path: "/enquiries", icon: Users }
+    {
+      label: "Reports",
+      icon: BarChart3,
+      key: "reports",
+      children: [
+        { label: "Daily Work Stats", path: "/emp-work" },
+        { label: "All-Over Report", path: "/employee-report" }
+      ]
+    },
+    {
+      key: "setting",
+      label: "Setting",
+      icon: Settings,
+      children: [
+        { label: "Leads Status", path: "/status", icon: Timer },
+        { label: "Lead Sources", path: "/source", icon: Layers },
+        { label: "Priority", path: "/priority", icon: Star },
+        { label: "Services", path: "/services", icon: Briefcase },
+        { label: "Tags", path: "/tag", icon: Tag },
+        { label: "Tag Parent", path: "/tag-parent", icon: GitBranch }
+      ]
+    },
+
   ];
+
 
   // ✅ Check active submenu
   const isParentActive = (item) => {
@@ -139,9 +159,8 @@ const Dashboard = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`sidebar ${isSidebarOpen ? "open" : "closed"} ${
-          isMobile ? "mobile" : ""
-        }`}
+        className={`sidebar ${isSidebarOpen ? "open" : "closed"} ${isMobile ? "mobile" : ""
+          }`}
       >
         <div className="sidebar-content">
 
@@ -179,11 +198,9 @@ const Dashboard = ({ children }) => {
                     ) : (
                       <>
                         <div
-                          className={`nav-btn has-sub ${
-                            openSubmenu === item.key ? "submenu-open" : ""
-                          } ${!isSidebarOpen ? "collapsed" : ""} ${
-                            isParentActive(item) ? "active" : ""
-                          }`}
+                          className={`nav-btn has-sub ${openSubmenu === item.key ? "submenu-open" : ""
+                            } ${!isSidebarOpen ? "collapsed" : ""} ${isParentActive(item) ? "active" : ""
+                            }`}
                           onClick={() =>
                             setOpenSubmenu(openSubmenu === item.key ? null : item.key)
                           }
@@ -233,13 +250,12 @@ const Dashboard = ({ children }) => {
 
       {/* Main */}
       <div
-        className={`main ${
-          isSidebarOpen && !isMobile
-            ? "expanded"
-            : isMobile
+        className={`main ${isSidebarOpen && !isMobile
+          ? "expanded"
+          : isMobile
             ? "mobile"
             : "collapsed"
-        }`}
+          }`}
       >
         {/* Header */}
         <header className="header">

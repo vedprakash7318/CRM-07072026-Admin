@@ -7,6 +7,7 @@ import Modal from 'react-bootstrap/Modal';
 import Dashboard from '../../Components/Dashboard';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import Skeleton from '@mui/material/Skeleton';
 
 function TagParent() {
   const APi_Url = import.meta.env.VITE_API_URL;
@@ -182,13 +183,18 @@ function TagParent() {
           </div>
 
           {loading ? (
-            <div className="loader-wrapper">
-              <div className="custom-loader"></div>
+            <div style={{ padding: "20px" }}>
+               <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+               <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+               <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+               <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+               <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
             </div>
           ) : (
             <DataTable value={filtered} stripedRows>
               <Column header="Sr." body={serial} />
               <Column field="tagParentName" header="Name" />
+              <Column field="usageCount" header="Usage Count" />
               <Column header="Action" body={actionTemplate} />
             </DataTable>
           )}

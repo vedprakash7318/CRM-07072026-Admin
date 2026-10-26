@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Modal from 'react-bootstrap/Modal';
 import Dashboard from '../../Components/Dashboard';
+import Skeleton from '@mui/material/Skeleton';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -202,18 +203,23 @@ function Services() {
               </div>
 
               {loading ? (
-                <div className="loader-wrapper">
-                  <div className="custom-loader"></div>
+                <div style={{ padding: "20px" }}>
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
                 </div>
-              ) : Array.isArray(ServicesData) && ServicesData.length > 0 ? (
+              ) : (Array.isArray(ServicesData) && ServicesData.length > 0 ? (
                 <DataTable value={ServicesData} stripedRows bordered>
                   <Column body={srNoTemplate} header="Sr. No." sortable />
                   <Column field="servicesText" header="Services" sortable />
+                  <Column field="usageCount" header="Usage Count" sortable />
                   <Column header="Action" body={actionBodyTemplate} />
                 </DataTable>
               ) : (
                 <div style={{ textAlign: 'center', padding: '20px' }}>No Services data available</div>
-              )}
+              ))}
 
               {/* Add Modal */}
               <Modal

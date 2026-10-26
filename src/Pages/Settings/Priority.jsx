@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Modal from 'react-bootstrap/Modal';
 import Dashboard from '../../Components/Dashboard';
+import Skeleton from '@mui/material/Skeleton';
 import { fetchPriority } from '../../Features/LeadSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
@@ -202,18 +203,23 @@ function Priority() {
               </div>
 
               {loading ? (
-                <div className="loader-wrapper">
-                  <div className="custom-loader"></div>
+                <div style={{ padding: "20px" }}>
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
                 </div>
-              ) : Array.isArray(priorityData) && priorityData.length > 0 ? (
+              ) : (Array.isArray(priorityData) && priorityData.length > 0 ? (
                 <DataTable value={priorityData} stripedRows bordered>
                   <Column body={srNoTemplate} header="Sr. No." sortable />
                   <Column field="priorityText" header="Priority" sortable />
+                  <Column field="usageCount" header="Usage Count" sortable />
                   <Column header="Action" body={actionBodyTemplate} />
                 </DataTable>
               ) : (
-                <div style={{ textAlign: 'center', padding: '20px' }}>No priority data available</div>
-              )}
+                <div style={{ textAlign: 'center', padding: '20px' }}>No Priority data available</div>
+              ))}
 
               {/* Add Modal */}
               <Modal

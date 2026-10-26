@@ -1,0 +1,5 @@
+/* Hide horizontal scrollbar but keep functionality */
+::-webkit-scrollbar:horizontal {
+    display: none;
+    height: 0;
+}

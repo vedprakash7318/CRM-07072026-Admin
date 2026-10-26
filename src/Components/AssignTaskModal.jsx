@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Modal, Button, ListGroup, FormControl, Spinner } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 
-const AssignTaskModal = ({ show, handleClose, employees, selectedData, onUpdate, onAssignSuccess }) => {
+const AssignTaskModal = ({ show, handleClose, employees, selectedData, onUpdate, onAssignSuccess, clearSelection }) => {
   const APi_Url = import.meta.env.VITE_API_URL;
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [filterText, setFilterText] = useState('');
@@ -47,7 +47,10 @@ const AssignTaskModal = ({ show, handleClose, employees, selectedData, onUpdate,
           text: `Leads have been successfully assigned to ${selectedEmployees.length} employee(s).`,
           confirmButtonText: 'OK'
         }).then(() => {
+          setSelectedEmployees([]);
+          setFilterText('');
           handleClose();
+          if (clearSelection) clearSelection();
           if (onUpdate) onUpdate();
           else if (onAssignSuccess) onAssignSuccess();
         });
@@ -73,7 +76,11 @@ const AssignTaskModal = ({ show, handleClose, employees, selectedData, onUpdate,
   };
 
   return (
-    <Modal show={show} onHide={handleClose}>
+    <Modal show={show} onHide={() => {
+      setSelectedEmployees([]);
+      setFilterText('');
+      handleClose();
+    }}>
       <Modal.Header closeButton>
         <Modal.Title>Assign Leads to Employees</Modal.Title>
       </Modal.Header>
@@ -132,7 +139,11 @@ const AssignTaskModal = ({ show, handleClose, employees, selectedData, onUpdate,
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="secondary" onClick={() => {
+          setSelectedEmployees([]);
+          setFilterText('');
+          handleClose();
+        }}>
           Close
         </Button>
         <Button

@@ -1,0 +1,8 @@
+{
+    "priority": [
+      { "value": "High"},
+      { "value": "Medium" },
+      { "value": "Low"}
+    ]
+  }
+  

@@ -12,24 +12,25 @@ import { fetchEmployee } from '../Features/LeadSlice';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 
-export default function DynamicCard({ 
-  lead, 
-  tableTitle,
-  onPageChange,
-  first,
-  rows,
-  totalRecords,
-  loading,
-  onEmployeeFilter,
-  employeeOptions,
-  onTagsChange,
-  tagOptions,
-  selectedTags,
-  onUpdate
+export default function DynamicCard({
+    lead,
+    tableTitle,
+    onPageChange,
+    first,
+    rows,
+    totalRecords,
+    loading,
+    onEmployeeFilter,
+    employeeOptions,
+    onTagsChange,
+    tagOptions,
+    selectedTags,
+    onUpdate,
+    onAssignSuccess,
+    lazy = true
 }) {
-    const APi_Url=import.meta.env.VITE_API_URL
+    const APi_Url = import.meta.env.VITE_API_URL
     const [showModal, setShowModal] = useState(false);
-    const [employees, setEmployee] = useState([]);
     const toast = useRef(null);
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -38,14 +39,13 @@ export default function DynamicCard({
         return (rawEmployees || []).filter((item) => item?.blocked === false);
     }, [rawEmployees]);
     // Fetching employees
-    useEffect(() => {  
-               dispatch(fetchEmployee());
-           }, [dispatch]);
-   
+    useEffect(() => {
+        dispatch(fetchEmployee());
+    }, [dispatch]);
+
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [title, setTitle] = useState('');
-    const [isEditMode, setEditMode] = useState(false);
     const [buttonTitle, setButtonTitle] = useState('');
     const [leadData, setLeadData] = useState([]);
     const [filters, setFilters] = useState({
@@ -69,14 +69,14 @@ export default function DynamicCard({
 
     const handleClose = () => setShowModal(false);
 
-    
+
     const onGlobalFilterChange = (e) => {
         const value = e.target.value;
         let _filters = { ...filters };
         _filters['global'].value = value;
         setFilters(_filters);
         setGlobalFilterValue(value);
-        
+
         if (onGlobalSearch) {
             onGlobalSearch(value);
         }
@@ -86,9 +86,9 @@ export default function DynamicCard({
     const filteredLeads = useMemo(() => {
         return lead.filter((rowData) => {
             const searchValue = filters.global.value?.toLowerCase();
-        
+
             if (!searchValue) return true; // No global filter? Return all.
-        
+
             return (
                 rowData.name?.toLowerCase().includes(searchValue) ||
                 rowData.phone?.toLowerCase().includes(searchValue) ||
@@ -100,7 +100,7 @@ export default function DynamicCard({
             );
         });
     }, [lead, filters.global.value]);
-    
+
     const openModal = (isEdit) => {
         setEditMode(isEdit);
         setTitle(isEdit ? "Update Lead" : "Add New Lead");
@@ -131,12 +131,12 @@ export default function DynamicCard({
             if (result.isConfirmed) {
                 try {
                     const response = await axios.put(`${APi_Url}/digicoder/crm/api/v1/lead/delete/${rowData._id}`);
-                    
+
                     if (response.status === 200) {
                         const updatedLeads = leadData.filter((item) => item._id !== rowData._id);
                         setLeadData(updatedLeads);
-                        
-                        toast.current.show({severity: 'success',summary: 'Success',detail: 'Lead deleted successfully!',life: 3000});
+
+                        toast.current.show({ severity: 'success', summary: 'Success', detail: 'Lead deleted successfully!', life: 3000 });
                         if (onUpdate) onUpdate();
                     }
                 } catch (error) {
@@ -180,32 +180,32 @@ export default function DynamicCard({
 
     const renderPagination = () => {
         if (!totalRecords || totalRecords <= rows) return null;
-        
+
         const totalPages = Math.ceil(totalRecords / rows);
         const currentPage = Math.floor(first / rows) + 1;
-        
+
         return (
             <div className="pagination-container">
-                <button 
+                <button
                     onClick={() => onPageChange({ first: Math.max(0, first - rows), rows })}
                     disabled={currentPage === 1}
                 >
                     <i className="ri-arrow-left-line"></i>
                 </button>
-                
+
                 <div className="page-numbers">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let startPage = Math.max(1, currentPage - 2);
                         let endPage = startPage + 4;
-                        
+
                         if (endPage > totalPages) {
                             endPage = totalPages;
                             startPage = Math.max(1, endPage - 4);
                         }
-                        
+
                         const pageNum = startPage + i;
                         const pageFirstIndex = (pageNum - 1) * rows;
-                        
+
                         return (
                             <button
                                 key={pageNum}
@@ -217,8 +217,8 @@ export default function DynamicCard({
                         );
                     })}
                 </div>
-                
-                <button 
+
+                <button
                     onClick={() => onPageChange({ first: first + rows, rows })}
                     disabled={currentPage === totalPages || totalPages === 0}
                 >
@@ -228,8 +228,13 @@ export default function DynamicCard({
         );
     };
 
+    const clearSelection = () => {
+        setSelectedRows([]);
+        setSelectAll(false);
+    };
+
     return (
-        <div className="card">
+        <div className="dynamic-card-container">
             <Toast ref={toast} />
 
             {/* Header */}
@@ -241,7 +246,7 @@ export default function DynamicCard({
             {/* Card Layout for Leads */}
             <div className="card-container">
                 {Array.isArray(filteredLeads) && filteredLeads.length > 0 ? (
-                    filteredLeads.map((rowData, index) => (
+                    (lazy ? filteredLeads : filteredLeads.slice(first, first + rows)).map((rowData, index) => (
                         <div className="lead-card" key={rowData._id} style={{ position: 'relative', overflow: 'hidden' }}>
                             {tableTitle === 'Missed Leads' && rowData.nextFollowupDate && (
                                 <div style={{
@@ -269,8 +274,31 @@ export default function DynamicCard({
                             <div className="lead-card-body">
                                 <p><strong>Name:</strong> {rowData.name}</p>
                                 <p><strong>Phone:</strong> {rowData.phone}</p>
-                                <p><strong>Priority:</strong> {rowData.priority?.priorityText}</p>
-                                <p><strong>Source:</strong> {rowData?.sources?.leadSourcesText}</p>
+                                {tableTitle !== 'Public Enquiries' && (
+                                    <>
+                                        <p><strong>Priority:</strong> {rowData.priority?.priorityText || "NA"}</p>
+                                        <p><strong>Source:</strong> {rowData?.sources?.leadSourcesText || "NA"}</p>
+                                    </>
+                                )}
+                                {tableTitle === 'Public Enquiries' && (
+                                    <p><strong>Date:</strong> {rowData?.createdAt ? new Date(rowData.createdAt).toLocaleDateString("en-IN") : "NA"}</p>
+                                )}
+                                {tableTitle === 'Public Enquiries' && (
+                                    <>
+                                        <p><strong>Accepted By:</strong> {(() => {
+                                            if (!rowData?.acceptedBy) return "NA";
+                                            if (typeof rowData.acceptedBy === 'object') return rowData.acceptedBy.empName || "NA";
+                                            const emp = rawEmployees?.find(e => e._id === rowData.acceptedBy);
+                                            return emp ? emp.empName : "NA";
+                                        })()}</p>
+                                        <p><strong>Targeted Emp:</strong> {(() => {
+                                            if (!rowData?.targetedEmployee) return "NA";
+                                            if (typeof rowData.targetedEmployee === 'object') return rowData.targetedEmployee.empName || "NA";
+                                            const emp = rawEmployees?.find(e => e._id === rowData.targetedEmployee);
+                                            return emp ? emp.empName : "NA";
+                                        })()}</p>
+                                    </>
+                                )}
                             </div>
                             <div className="lead-card-actions">
                                 <button onClick={() => handleEdit(rowData)} className="action-button edit">Edit</button>
@@ -289,7 +317,7 @@ export default function DynamicCard({
 
             {/* Modals */}
             <Modal isOpen={isModalOpen} onClose={closeModal} title={title} buttonTitle={buttonTitle} leadData={leadData} />
-            <AssignTaskModal show={showModal} handleClose={handleClose} employees={employeeData} selectedData={selectedRows} onUpdate={onUpdate} />
+            <AssignTaskModal show={showModal} handleClose={handleClose} employees={employeeData} selectedData={selectedRows} onUpdate={onUpdate} clearSelection={clearSelection} onAssignSuccess={onAssignSuccess} />
         </div>
     );
 }

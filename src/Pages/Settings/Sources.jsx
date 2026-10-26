@@ -4,6 +4,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Modal from 'react-bootstrap/Modal';
 import Dashboard from '../../Components/Dashboard';
+import Skeleton from '@mui/material/Skeleton';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
@@ -199,14 +200,19 @@ function Sources() {
               </div>
 
               {loading ? (
-                <div className="loader-wrapper">
-                  <div className="custom-loader"></div>
+                <div style={{ padding: "20px" }}>
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ marginBottom: "10px", borderRadius: "8px" }} />
+                   <Skeleton variant="rectangular" height={50} style={{ borderRadius: "8px" }} />
                 </div>
               ) : (
                 Array.isArray(sourcesData) && sourcesData.length > 0 ? (
                   <DataTable value={sourcesData} stripedRows bordered>
                     <Column body={srNoTemplate} header="Sr. No." sortable />
                     <Column field="leadSourcesText" header="Source" sortable />
+                    <Column field="usageCount" header="Usage Count" sortable />
                     <Column header="Action" body={actionBodyTemplate} />
                   </DataTable>
                 ) : (
